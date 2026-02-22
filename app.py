@@ -336,7 +336,6 @@ def clear_results():
 # RUN APP
 # -----------------------------
 if __name__ == "__main__":
-    init_db()   # ensures DB exists on server
     app.run()
 
 
