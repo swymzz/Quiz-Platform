@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Quiz Result</h2>
+
+    <h3>Score: {{ score }}</h3>
+    <h3>Percentage: {{ percentage }}%</h3>
+    <h3>Status: {{ status }}</h3>
+
+    {% if status == "FAIL" %}
+        <form action="/quiz" method="POST">
+            <input type="hidden" name="name" value="{{ name }}">
+            <input type="hidden" name="email" value="{{ email }}">
+            <button type="submit">Retry Quiz</button>
+        </form>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

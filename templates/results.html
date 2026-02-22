@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Analytics</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+.stats{display:flex; gap:20px; margin-bottom:20px;}
+.card{flex:1; padding:20px; border-radius:10px; background:#334155; text-align:center;}
+</style>
+</head>
+
+<body>
+<div class="container" style="width:900px;">
+<h2>📊 Quiz Analytics</h2>
+
+<div class="stats">
+<div class="card">Attempts<br><h2>{{total_attempts}}</h2></div>
+<div class="card">Passed<br><h2>{{passed}}</h2></div>
+<div class="card">Failed<br><h2>{{failed}}</h2></div>
+<div class="card">Avg %<br><h2>{{avg}}</h2></div>
+</div>
+
+<table style="width:100%;">
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Score</th>
+<th>%</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+{% for u in users %}
+<tr>
+<td>{{u[1]}}</td>
+<td>{{u[2]}}</td>
+<td>{{u[3]}}</td>
+<td>{{u[4]}}%</td>
+<td>{{u[5]}}</td>
+<td>
+<a href="/delete_result/{{u[0]}}">
+<button style="background:#ef4444;">Delete</button>
+</a>
+</td>
+</tr>
+{% endfor %}
+</table>
+
+<br><br>
+<a href="/clear_results">
+<button style="background:#b91c1c;">⚠ Clear ALL Attempts</button>
+</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <a href="/logout"><button>Logout</button></a>
+    <a href="/admin/questions"><button>Manage Questions</button></a>
+    <a href="/results"><button>View Results Dashboard</button></a>
+    <h2>Admin Panel</h2>
+    <p>Add New Question</p>
+
+    <form method="POST">
+
+        <input type="text" name="question" placeholder="Enter Question" required>
+
+        <input type="text" name="option1" placeholder="Option 1" required>
+        <input type="text" name="option2" placeholder="Option 2" required>
+        <input type="text" name="option3" placeholder="Option 3" required>
+        <input type="text" name="option4" placeholder="Option 4" required>
+
+        <input type="text" name="answer" placeholder="Correct Answer (Must match option exactly)" required>
+
+        <button type="submit">Add Question</button>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Instructions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+    <h2>Quiz Instructions</h2>
+    <ul>
+        <li>Each question has 30 seconds.</li>
+        <li>You cannot go back.</li>
+        <li>Minimum 60% required to pass.</li>
+    </ul>
+
+    <form action="/quiz" method="POST">
+        <input type="hidden" name="name" value="{{ name }}">
+        <input type="hidden" name="email" value="{{ email }}">
+        <button type="submit">Start Quiz</button>
+    </form>
+</body>
+</html>

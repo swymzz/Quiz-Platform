@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Edit Question</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+<h2>Edit Question</h2>
+
+<form method="POST">
+<input type="text" name="question" value="{{ q[1] }}" required>
+<input type="text" name="option1" value="{{ q[2] }}" required>
+<input type="text" name="option2" value="{{ q[3] }}" required>
+<input type="text" name="option3" value="{{ q[4] }}" required>
+<input type="text" name="option4" value="{{ q[5] }}" required>
+<input type="text" name="answer" value="{{ q[6] }}" required>
+
+<button type="submit">Update</button>
+</form>
+
+</div>
+</body>
+</html>

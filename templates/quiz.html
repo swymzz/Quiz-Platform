@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Exam</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+.exam-layout{
+    display:flex;
+    gap:30px;
+    padding:30px;
+}
+
+.palette{
+    width:220px;
+    background:#1e293b;
+    padding:20px;
+    border-radius:12px;
+    height:fit-content;
+}
+
+.palette-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+}
+
+.q-btn{
+    padding:10px;
+    border:none;
+    border-radius:6px;
+    background:#ef4444;
+    color:white;
+    cursor:pointer;
+}
+
+.answered{ background:#22c55e; }
+
+.timer-box{
+    text-align:center;
+    font-size:24px;
+    margin-bottom:15px;
+}
+</style>
+
+<script>
+let answers = {};
+let current = 0;
+let totalTime = {{ total_time }};
+let totalQuestions = {{ questions|length }};
+
+function loadQuestion(index){
+    if(index < 0 || index >= totalQuestions) return;
+
+    let blocks = document.getElementsByClassName("question-block");
+    for(let i=0;i<blocks.length;i++){
+        blocks[i].style.display="none";
+    }
+
+    blocks[index].style.display="block";
+    current = index;
+}
+
+function saveAnswer(qIndex,value){
+    answers[qIndex] = value;
+    document.getElementById("btn"+qIndex).classList.add("answered");
+    updateStats();
+}
+
+function updateStats(){
+    let attempted = Object.keys(answers).length;
+    document.getElementById("attempted").innerText = attempted;
+}
+
+function submitQuiz(){
+    for(let key in answers){
+        let input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "q"+key;
+        input.value = answers[key];
+        document.getElementById("quizForm").appendChild(input);
+    }
+    document.getElementById("quizForm").submit();
+}
+
+function formatTime(seconds){
+    let mins = Math.floor(seconds/60);
+    let secs = seconds%60;
+    if(secs < 10) secs = "0"+secs;
+    return mins + ":" + secs;
+}
+
+setInterval(function(){
+    if(totalTime >= 0){
+        document.getElementById("timer").innerText = formatTime(totalTime);
+        totalTime--;
+    } else {
+        alert("Time Up!");
+        submitQuiz();
+    }
+},1000);
+
+window.onload = function(){
+    loadQuestion(0);
+}
+</script>
+</head>
+
+<body>
+
+<div class="timer-box">
+⏱ Time Left: <span id="timer"></span>
+<br>
+Attempted: <span id="attempted">0</span> / {{ questions|length }}
+</div>
+
+<div class="exam-layout">
+
+<!-- LEFT SIDE QUESTIONS -->
+<div style="flex:1;">
+<form id="quizForm" action="/result" method="POST">
+<input type="hidden" name="name" value="{{ name }}">
+<input type="hidden" name="email" value="{{ email }}">
+
+{% for q in questions %}
+<div class="question-block" style="display:none;">
+<h2>Question {{ loop.index }}</h2>
+<h3>{{ q[1] }}</h3>
+
+<label class="option">
+<input type="radio"
+       name="temp{{loop.index0}}"
+       onclick="saveAnswer({{loop.index0}}, `{{ q[2] }}`)">
+<span>{{ q[2] }}</span>
+</label>
+
+<label class="option">
+<input type="radio"
+       name="temp{{loop.index0}}"
+       onclick="saveAnswer({{loop.index0}}, `{{ q[3] }}`)">
+<span>{{ q[3] }}</span>
+</label>
+
+<label class="option">
+<input type="radio"
+       name="temp{{loop.index0}}"
+       onclick="saveAnswer({{loop.index0}}, `{{ q[4] }}`)">
+<span>{{ q[4] }}</span>
+</label>
+
+<label class="option">
+<input type="radio"
+       name="temp{{loop.index0}}"
+       onclick="saveAnswer({{loop.index0}}, `{{ q[5] }}`)">
+<span>{{ q[5] }}</span>
+</label>
+
+<br><br>
+<button type="button" onclick="loadQuestion(current-1)">Previous</button>
+<button type="button" onclick="loadQuestion(current+1)">Next</button>
+
+</div>
+{% endfor %}
+
+<br>
+<button type="button" onclick="submitQuiz()">Submit Exam</button>
+</form>
+</div>
+
+<!-- RIGHT SIDE PALETTE -->
+<div class="palette">
+<h3>Questions</h3>
+<div class="palette-grid">
+{% for q in questions %}
+<button type="button"
+        id="btn{{loop.index0}}"
+        class="q-btn"
+        onclick="loadQuestion({{loop.index0}})">
+{{loop.index}}
+</button>
+{% endfor %}
+</div>
+</div>
+
+</div>
+</body>
+</html>

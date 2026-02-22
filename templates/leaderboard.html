@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Leaderboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container" style="width:700px;">
+<h2>🏆 Leaderboard - Top Performers</h2>
+
+{% if leaders|length == 0 %}
+<h3>No attempts yet.</h3>
+{% else %}
+
+<table style="width:100%; margin-top:25px;">
+<tr>
+<th>Rank</th>
+<th>Name</th>
+<th>Email</th>
+<th>Score</th>
+<th>%</th>
+</tr>
+
+{% for user in leaders %}
+<tr>
+<td>{{ loop.index }}</td>
+<td>{{ user[0] }}</td>
+<td>{{ user[1] }}</td>
+<td>{{ user[2] }}</td>
+<td>{{ user[3] }}%</td>
+</tr>
+{% endfor %}
+</table>
+{% endif %}
+<br>
+<a href="/"><button>Take Quiz</button></a>
+
+</div>
+</body>
+</html>

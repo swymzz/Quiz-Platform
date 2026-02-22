@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Manage Questions</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container" style="width:900px;">
+<h2>Question Bank ({{ questions|length }} Questions)</h2>
+
+<table style="width:100%;">
+<tr>
+<th>ID</th><th>Question</th><th>Actions</th>
+</tr>
+
+{% for q in questions %}
+<tr>
+<td>{{ q[0] }}</td>
+<td>{{ q[1] }}</td>
+<td>
+<a href="/edit_question/{{q[0]}}"><button>Edit</button></a>
+<a href="/delete_question/{{q[0]}}"><button>Delete</button></a>
+</td>
+</tr>
+{% endfor %}
+</table>
+
+<a href="/admin"><button>Back</button></a>
+
+</div>
+</body>
+</html>
