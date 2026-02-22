@@ -136,25 +136,36 @@ def edit_question(id):
 def register():
     return render_template("register.html")
 
-@app.route("/instructions", methods=["POST"])
+@app.route("/instructions", methods=["GET","POST"])
 def instructions():
+    if request.method == "GET":
+        return redirect("/")
+
     return render_template("instructions.html",
                            name=request.form["name"],
                            email=request.form["email"])
 
-@app.route("/quiz", methods=["POST"])
+@app.route("/quiz", methods=["GET","POST"])
 def quiz():
-    conn=sqlite3.connect(DB_PATH)
-    questions=conn.execute("SELECT * FROM questions").fetchall()
+    # Prevent direct opening of /quiz
+    if request.method == "GET":
+        return redirect("/")
+
+    conn = sqlite3.connect(DB_PATH)
+    questions = conn.execute("SELECT * FROM questions").fetchall()
     conn.close()
+
     return render_template("quiz.html",
                            questions=questions,
                            name=request.form["name"],
                            email=request.form["email"],
                            total_time=len(questions)*30)
 
-@app.route("/result", methods=["POST"])
+@app.route("/result", methods=["GET","POST"])
 def result():
+    if request.method == "GET":
+        return redirect("/")
+
     conn=sqlite3.connect(DB_PATH)
     questions=conn.execute("SELECT * FROM questions").fetchall()
     conn.close()
@@ -178,19 +189,49 @@ def result():
 # -----------------------------
 @app.route("/leaderboard")
 def leaderboard():
-    conn=sqlite3.connect(DB_PATH)
-    leaders=conn.execute("SELECT name,email,score,percentage FROM users ORDER BY percentage DESC LIMIT 10").fetchall()
+    conn = sqlite3.connect(DB_PATH)
+    leaders = conn.execute(
+        "SELECT name,email,score,percentage FROM users ORDER BY percentage DESC LIMIT 10"
+    ).fetchall()
     conn.close()
+
+    if leaders is None:
+        leaders = []
+
     return render_template("leaderboard.html", leaders=leaders)
 
 @app.route("/results")
 def view_results():
     if not session.get("admin"):
         return redirect("/login")
-    conn=sqlite3.connect(DB_PATH)
-    users=conn.execute("SELECT * FROM users").fetchall()
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM users")
+    users = c.fetchall()
+
+    # analytics calculations
+    c.execute("SELECT COUNT(*) FROM users")
+    total_attempts = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM users WHERE status='PASS'")
+    passed = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM users WHERE status='FAIL'")
+    failed = c.fetchone()[0]
+
+    c.execute("SELECT AVG(percentage) FROM users")
+    avg = c.fetchone()[0] or 0
+
     conn.close()
-    return render_template("results.html", users=users)
+
+    return render_template("results.html",
+                           users=users,
+                           total_attempts=total_attempts,
+                           passed=passed,
+                           failed=failed,
+                           avg=round(avg,2))
 
 @app.route("/clear_results")
 def clear_results():
@@ -203,4 +244,4 @@ def clear_results():
     return redirect("/results")
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
