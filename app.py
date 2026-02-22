@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey123"
@@ -8,7 +11,7 @@ app.secret_key = "supersecretkey123"
 # DATABASE SETUP
 # -----------------------------
 def init_db():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     # Questions table
@@ -88,7 +91,7 @@ def admin():
         option4 = request.form["option4"]
         answer = request.form["answer"]
 
-        conn = sqlite3.connect("database.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
         c.execute("""
@@ -109,7 +112,7 @@ def view_results():
     if not session.get("admin"):
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     # all users
@@ -151,7 +154,7 @@ def view_questions():
     if not session.get("admin"):
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM questions")
     questions = c.fetchall()
@@ -167,7 +170,7 @@ def delete_question(id):
     if not session.get("admin"):
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM questions WHERE id=?", (id,))
     conn.commit()
@@ -183,7 +186,7 @@ def edit_question(id):
     if not session.get("admin"):
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     if request.method == "POST":
@@ -224,7 +227,7 @@ def quiz():
     name = request.form["name"]
     email = request.form["email"]
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM questions")
     questions = c.fetchall()
@@ -243,7 +246,7 @@ def result():
     name = request.form["name"]
     email = request.form["email"]
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM questions")
     questions = c.fetchall()
@@ -261,7 +264,7 @@ def result():
     percentage = (score / len(questions)) * 100 if len(questions) > 0 else 0
     status = "PASS" if percentage >= 60 else "FAIL"
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
         INSERT INTO users (name, email, score, percentage, status)
@@ -285,7 +288,7 @@ def delete_result(id):
     if not session.get("admin"):
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM users WHERE id=?", (id,))
     conn.commit()
@@ -299,7 +302,7 @@ def delete_result(id):
 # -----------------------------
 @app.route("/leaderboard")
 def leaderboard():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute("""
@@ -322,7 +325,7 @@ def clear_results():
     if not session.get("admin"):
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM users")
     conn.commit()
