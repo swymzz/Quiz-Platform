@@ -6,7 +6,6 @@ DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey123"
-init_db()
 # -----------------------------
 # DATABASE SETUP
 # -----------------------------
