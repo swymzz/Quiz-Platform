@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, session
 import sqlite3
 import os
 
@@ -6,13 +6,10 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey123"
 
 # -----------------------------
-# DATABASE PATH (LOCAL + RENDER SAFE)
+# DATABASE PATH (WORKS LOCAL + RENDER)
 # -----------------------------
-if os.getenv("RENDER"):
-    DB_PATH = "/opt/render/project/src/database.db"
-else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DB_PATH = os.path.join(BASE_DIR, "database.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 # -----------------------------
 # DATABASE SETUP
@@ -22,7 +19,7 @@ def init_db():
     c = conn.cursor()
 
     c.execute("""
-    CREATE TABLE IF NOT EXISTS questions (
+    CREATE TABLE IF NOT EXISTS questions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         question TEXT,
         option1 TEXT,
@@ -34,7 +31,7 @@ def init_db():
     """)
 
     c.execute("""
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         email TEXT,
@@ -47,30 +44,27 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ⭐ Create DB when server starts (IMPORTANT FOR RENDER)
+# ⭐ IMPORTANT: create DB when app starts (Render needs this)
 init_db()
 
 # -----------------------------
-# ADMIN CREDENTIALS
+# ADMIN LOGIN
 # -----------------------------
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "1234"
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="1234"
 
-# -----------------------------
-# LOGIN
-# -----------------------------
 @app.route("/login", methods=["GET","POST"])
 def login():
-    if request.method == "POST":
-        if request.form["username"] == ADMIN_USERNAME and request.form["password"] == ADMIN_PASSWORD:
-            session["admin"] = True
+    if request.method=="POST":
+        if request.form["username"]==ADMIN_USERNAME and request.form["password"]==ADMIN_PASSWORD:
+            session["admin"]=True
             return redirect("/admin")
-        return "Wrong credentials!"
+        return "Wrong credentials"
     return render_template("login.html")
 
 @app.route("/logout")
 def logout():
-    session.pop("admin", None)
+    session.pop("admin",None)
     return redirect("/login")
 
 # -----------------------------
@@ -81,13 +75,12 @@ def admin():
     if not session.get("admin"):
         return redirect("/login")
 
-    if request.method == "POST":
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("""INSERT INTO questions (question,option1,option2,option3,option4,answer)
-                     VALUES (?,?,?,?,?,?)""",
-                     (request.form["question"],request.form["option1"],request.form["option2"],
-                      request.form["option3"],request.form["option4"],request.form["answer"]))
+    if request.method=="POST":
+        conn=sqlite3.connect(DB_PATH)
+        conn.execute("""INSERT INTO questions(question,option1,option2,option3,option4,answer)
+                        VALUES(?,?,?,?,?,?)""",
+                        (request.form["question"],request.form["option1"],request.form["option2"],
+                         request.form["option3"],request.form["option4"],request.form["answer"]))
         conn.commit()
         conn.close()
 
@@ -100,10 +93,8 @@ def admin():
 def view_questions():
     if not session.get("admin"):
         return redirect("/login")
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT * FROM questions")
-    questions = c.fetchall()
+    conn=sqlite3.connect(DB_PATH)
+    questions=conn.execute("SELECT * FROM questions").fetchall()
     conn.close()
     return render_template("manage_questions.html", questions=questions)
 
@@ -111,7 +102,7 @@ def view_questions():
 def delete_question(id):
     if not session.get("admin"):
         return redirect("/login")
-    conn = sqlite3.connect(DB_PATH)
+    conn=sqlite3.connect(DB_PATH)
     conn.execute("DELETE FROM questions WHERE id=?", (id,))
     conn.commit()
     conn.close()
@@ -122,10 +113,10 @@ def edit_question(id):
     if not session.get("admin"):
         return redirect("/login")
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    conn=sqlite3.connect(DB_PATH)
+    c=conn.cursor()
 
-    if request.method == "POST":
+    if request.method=="POST":
         c.execute("""UPDATE questions SET question=?,option1=?,option2=?,option3=?,option4=?,answer=? WHERE id=?""",
                   (request.form["question"],request.form["option1"],request.form["option2"],
                    request.form["option3"],request.form["option4"],request.form["answer"],id))
@@ -134,9 +125,9 @@ def edit_question(id):
         return redirect("/admin/questions")
 
     c.execute("SELECT * FROM questions WHERE id=?", (id,))
-    question = c.fetchone()
+    q=c.fetchone()
     conn.close()
-    return render_template("edit_question.html", q=question)
+    return render_template("edit_question.html", q=q)
 
 # -----------------------------
 # USER FLOW
@@ -147,12 +138,14 @@ def register():
 
 @app.route("/instructions", methods=["POST"])
 def instructions():
-    return render_template("instructions.html", name=request.form["name"], email=request.form["email"])
+    return render_template("instructions.html",
+                           name=request.form["name"],
+                           email=request.form["email"])
 
 @app.route("/quiz", methods=["POST"])
 def quiz():
-    conn = sqlite3.connect(DB_PATH)
-    questions = conn.execute("SELECT * FROM questions").fetchall()
+    conn=sqlite3.connect(DB_PATH)
+    questions=conn.execute("SELECT * FROM questions").fetchall()
     conn.close()
     return render_template("quiz.html",
                            questions=questions,
@@ -162,60 +155,52 @@ def quiz():
 
 @app.route("/result", methods=["POST"])
 def result():
-    conn = sqlite3.connect(DB_PATH)
-    questions = conn.execute("SELECT * FROM questions").fetchall()
+    conn=sqlite3.connect(DB_PATH)
+    questions=conn.execute("SELECT * FROM questions").fetchall()
     conn.close()
 
-    score = sum(1 for i,q in enumerate(questions) if request.form.get(f"q{i}") == q[6])
-    percentage = (score/len(questions))*100 if questions else 0
-    status = "PASS" if percentage >= 60 else "FAIL"
+    score=sum(1 for i,q in enumerate(questions) if request.form.get(f"q{i}")==q[6])
+    percentage=(score/len(questions))*100 if questions else 0
+    status="PASS" if percentage>=60 else "FAIL"
 
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("INSERT INTO users (name,email,score,percentage,status) VALUES (?,?,?,?,?)",
+    conn=sqlite3.connect(DB_PATH)
+    conn.execute("INSERT INTO users(name,email,score,percentage,status) VALUES(?,?,?,?,?)",
                  (request.form["name"],request.form["email"],score,percentage,status))
     conn.commit()
     conn.close()
 
-    return render_template("result.html", score=score, percentage=percentage,
-                           status=status, name=request.form["name"], email=request.form["email"])
+    return render_template("result.html",
+                           score=score,percentage=percentage,status=status,
+                           name=request.form["name"],email=request.form["email"])
 
 # -----------------------------
-# ANALYTICS / LEADERBOARD
+# ANALYTICS + LEADERBOARD
 # -----------------------------
 @app.route("/leaderboard")
 def leaderboard():
-    conn = sqlite3.connect(DB_PATH)
-    leaders = conn.execute("SELECT name,email,score,percentage FROM users ORDER BY percentage DESC LIMIT 10").fetchall()
+    conn=sqlite3.connect(DB_PATH)
+    leaders=conn.execute("SELECT name,email,score,percentage FROM users ORDER BY percentage DESC LIMIT 10").fetchall()
     conn.close()
     return render_template("leaderboard.html", leaders=leaders)
-
-@app.route("/clear_results")
-def clear_results():
-    if not session.get("admin"):
-        return redirect("/login")
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("DELETE FROM users")
-    conn.commit()
-    conn.close()
-    return redirect("/results")
 
 @app.route("/results")
 def view_results():
     if not session.get("admin"):
         return redirect("/login")
-
-    conn = sqlite3.connect(DB_PATH)
-    users = conn.execute("SELECT * FROM users").fetchall()
-    total_attempts = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    passed = conn.execute("SELECT COUNT(*) FROM users WHERE status='PASS'").fetchone()[0]
-    failed = conn.execute("SELECT COUNT(*) FROM users WHERE status='FAIL'").fetchone()[0]
-    avg = conn.execute("SELECT AVG(percentage) FROM users").fetchone()[0] or 0
+    conn=sqlite3.connect(DB_PATH)
+    users=conn.execute("SELECT * FROM users").fetchall()
     conn.close()
+    return render_template("results.html", users=users)
 
-    return render_template("results.html", users=users,
-                           total_attempts=total_attempts,
-                           passed=passed, failed=failed,
-                           avg=round(avg,2))
+@app.route("/clear_results")
+def clear_results():
+    if not session.get("admin"):
+        return redirect("/login")
+    conn=sqlite3.connect(DB_PATH)
+    conn.execute("DELETE FROM users")
+    conn.commit()
+    conn.close()
+    return redirect("/results")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
