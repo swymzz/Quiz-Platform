@@ -185,6 +185,21 @@ def result():
                            name=request.form["name"],email=request.form["email"])
 
 # -----------------------------
+# DELETE SINGLE RESULT (ADMIN)
+# -----------------------------
+@app.route("/delete_result/<int:id>")
+def delete_result(id):
+    if not session.get("admin"):
+        return redirect("/login")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("DELETE FROM users WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect("/results")
+
+# -----------------------------
 # ANALYTICS + LEADERBOARD
 # -----------------------------
 @app.route("/leaderboard")
